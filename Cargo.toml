@@ -1,0 +1,27 @@
+[package]
+name = "chiselstore"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-notify = "0.2.0"
+async-trait = "0.1.52"
+async-mutex = "1.4.0"
+crossbeam-channel = "0.5.1"
+crossbeam = "0.8.1"
+derivative = "2.2.0"
+omnipaxos_core = { git = "https://github.com/haraldng/omnipaxos" }
+prost = "0.8.0"
+sqlite = "0.26.0"
+thiserror = "1.0.30"
+tokio = { version = "1.11.0", features = ["full"] }
+tonic = "0.5.2"
+
+[build-dependencies]
+tonic-build = "0.5.2"
+
+[dev-dependencies]
+anyhow = { version = "1.0.45", features = ["backtrace"] }
+structopt = "0.3.25"

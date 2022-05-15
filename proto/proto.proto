@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package proto;
+
+message Void {
+}
+
+/*enum Consistency {
+    STRONG = 0;
+    RELAXED_READS = 1;
+}*/
+
+message Query {
+    string sql = 1;
+//    Consistency consistency = 2;
+}
+message QueryRow {
+    repeated string values = 1;
+}
+
+message QueryResults {
+    repeated QueryRow rows = 1;
+}
+
+message beat_req_obj {
+    uint32 round = 1;
+}
+
+message ballot_obj {
+    uint32 n = 1;
+    uint64 priority = 2;
+    uint64 pid = 3;
+}
+
+
+message beat_rep_obj {
+    uint32 round = 1;
+    ballot_obj ballot = 2;
+    bool majority_connected = 3;
+}
+message str_cmd_obj {
+    uint64 id = 1;
+    string sql = 2;
+}
+
+message ble_msg__obj {
+    uint64 from = 1;
+    uint64 to = 2;
+    oneof msg {
+        beat_req_obj best_req = 3;
+        beat_rep_obj best_rep = 4;
+        }
+}
+
+
+message sync_itm_obj {
+    oneof item {
+        Entries entries = 1;
+        Snapshot snapshot = 2;
+        None none = 3;
+    }
+    message Entries {
+        repeated str_cmd_obj vec = 1;
+    }
+    enum Snapshot {
+        Complete = 0;
+        Delta = 1;
+        phtm = 2;
+    }
+    message None {
+    }
+}
+
+message prep_obj {
+    ballot_obj n = 1;
+    uint64 ld = 2;
+    ballot_obj n_accepted = 3;
+    uint64 la = 4;
+}
+
+message stp_obj {
+    uint32 config_id = 1;
+    repeated uint64 nodes = 2;
+    optional Metadata metadata = 3;
+    message Metadata {
+        repeated uint32 vec = 1;
+    }
+}
+
+message p_obj {
+    ballot_obj n = 1;
+    ballot_obj n_accepted = 2;
+    optional sync_itm_obj sync_item = 3;
+    uint64 ld = 4;
+    uint64 la = 5;
+    optional stp_obj stopsign = 6;
+}
+
+message acc_sync_obj {
+    ballot_obj n = 1;
+    sync_itm_obj sync_item = 2;
+    uint64 sync_idx = 3;
+    optional uint64 decide_idx = 4;
+    optional stp_obj stopsign = 5;
+}
+
+message f_acc_obj {
+    ballot_obj n = 1;
+    repeated str_cmd_obj entries = 2;
+}
+
+message acc_dcd_obj {
+    ballot_obj n = 1;
+    uint64 ld = 2;
+    repeated str_cmd_obj entries = 3;
+}
+
+message acc_ed_obj {
+    ballot_obj n = 1;
+    uint64 la = 2;
+}
+message Acceptstp_obj {
+    ballot_obj n = 1;
+    stp_obj ss = 2;
+}
+
+message dcd_obj {
+    ballot_obj n = 1;
+    uint64 ld = 2;
+}
+
+message Acceptedstp_obj {
+    ballot_obj n = 1;
+}
+
+message Decidestp_obj {
+    ballot_obj n = 1;
+}
+
+message comp_obj {
+    oneof compaction {
+        Trim trim = 1;
+        uint64 snapshot = 2;
+    }
+    message Trim {
+        optional uint64 trim = 1;
+    }
+}
+
+message prpd_r_obj {
+}
+
+message prpd_fwd_obj {
+    repeated str_cmd_obj entries = 1;
+}
+
+message paxos_msg_obj {
+    uint64 from = 1;
+    uint64 to = 2;
+    oneof msg {
+        prpd_r_obj prepare_req = 3;
+        prep_obj prepare = 4;
+        p_obj promise = 5;
+        acc_sync_obj accept_sync = 6;
+        f_acc_obj first_accept = 7;
+        acc_dcd_obj accept_decide = 8;
+        acc_ed_obj accepted = 9;
+        dcd_obj decide = 10;
+        prpd_fwd_obj proposal_forward = 11;
+        comp_obj compaction = 12;
+        comp_obj forward_compaction = 13;
+        Acceptstp_obj accept_stop_sign = 14;
+        Acceptedstp_obj accepted_stop_sign = 15;
+        Decidestp_obj decide_stop_sign = 16;
+    }
+}
+
+service RPC {
+    rpc Execute(Query) returns (QueryResults);
+    rpc Blemessage(ble_msg__obj) returns (Void);
+    rpc sp_msg(paxos_msg_obj) returns (Void);
+}
